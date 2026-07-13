@@ -1,0 +1,14 @@
+WHITESPACE = _{ " " | "\t" }
+
+number = { ASCII_DIGIT+ }
+letter = { ASCII_ALPHA }
+
+fraction = { "\\frac{" ~ expression ~ "}{" ~ expression ~ "}" }
+term = { (fraction | number)? ~ letter+ }
+
+// Všechny tyto "samostatné" jednotky obalíme do pravidla 'primary' (základ)
+primary = { fraction | term | number }
+
+// Výraz je 'primary', za kterým může následovat nekonečně mnoho dalších sčítání/odčítání!
+operation = { "+" | "-" }
+expression = { primary ~ (operation ~ primary)* }

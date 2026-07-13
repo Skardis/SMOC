@@ -1,0 +1,5 @@
+[workspace]
+members = [
+    "smoc_core",
+]
+resolver = "2"
