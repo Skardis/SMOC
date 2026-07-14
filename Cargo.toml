@@ -1,5 +1,7 @@
 [workspace]
 members = [
-    "smoc_core",
+    "smoc_arithmetics",
+    "smoc_core", 
+    "smoc_latex"
 ]
 resolver = "2"
