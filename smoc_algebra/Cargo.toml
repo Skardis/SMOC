@@ -1,14 +1,10 @@
 [package]
-name = "smoc_latex"
+name = "smoc_algebra"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-pest = "2.8.7"
-pest_derive = "2.8.7"
 smoc_core = { version = "0.1.0", path = "../smoc_core" }
 
 [dev-dependencies]
-smoc_algebra = { path = "../smoc_algebra" }
 smoc_arithmetics = { path = "../smoc_arithmetics" }
-smoc_core = { path = "../smoc_core" }

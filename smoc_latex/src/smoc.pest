@@ -1,14 +1,24 @@
 WHITESPACE = _{ " " | "\t" }
 
-number = { ASCII_DIGIT+ }
-letter = { ASCII_ALPHA }
+number = @{ ASCII_DIGIT+ }
+letter = @{ ASCII_ALPHA }
 
 fraction = { "\\frac{" ~ expression ~ "}{" ~ expression ~ "}" }
-term = { (fraction | number)? ~ letter+ }
+group = { "{" ~ expression ~ "}" }
 
-// Všechny tyto "samostatné" jednotky obalíme do pravidla 'primary' (základ)
-primary = { fraction | term | number }
+sqrt_degree = { expression }
+sqrt = { "\\sqrt" ~ ("[" ~ sqrt_degree ~ "]")? ~ "{" ~ expression ~ "}" }
 
-// Výraz je 'primary', za kterým může následovat nekonečně mnoho dalších sčítání/odčítání!
+// Nejmenší nedělitelný kousek matematiky
+atom = { fraction | sqrt | group | number | letter }
+
+// Mocnina (např. x^2) - má vyšší prioritu než násobení
+power = { atom ~ ("^" ~ atom)* }
+
+// Term je série mocnin vedle sebe (skryté násobení, např. 4x^2, nebo explicitní \cdot)
+term = { power ~ (("\\cdot" | "*")? ~ power)* }
+
+primary = { term }
+
 operation = { "+" | "-" }
 expression = { primary ~ (operation ~ primary)* }

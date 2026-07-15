@@ -1,5 +1,5 @@
 [workspace]
-members = [
+members = ["smoc_algebra",
     "smoc_arithmetics",
     "smoc_core", 
     "smoc_latex"

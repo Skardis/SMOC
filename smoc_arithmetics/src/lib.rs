@@ -147,6 +147,28 @@ pub fn rule_simplify_fraction(expr: &Expr) -> Option<Expr> {
     None
 }
 
+// Pravidlo 3: Obyčejné sčítání čísel (např. 1+2 = 3)
+pub fn rule_add_numbers(expr: &Expr) -> Option<Expr> {
+    if let Expr::Node(name, items) = expr {
+        if name == "Add" {
+            let mut all_numbers = true;
+            let mut sum = 0;
+            for item in items {
+                if let Expr::Number(n) = item {
+                    sum += n;
+                } else {
+                    all_numbers = false;
+                    break;
+                }
+            }
+            if all_numbers && items.len() > 1 {
+                return Some(Expr::Number(sum));
+            }
+        }
+    }
+    None
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -166,10 +188,16 @@ mod tests {
         ]);
 
         let mut engine = SmocEngine::new();
-        engine.add_rule(rule_factorize_add);
-        engine.add_rule(rule_simplify_fraction);
+        engine.add_rule("Vytýkání ze sčítání", rule_factorize_add);
+        engine.add_rule("Krácení zlomků", rule_simplify_fraction);
 
-        let final_expr = engine.simplify(&math_expr);
+        let (final_expr, steps) = engine.simplify_with_steps(&math_expr);
+        
+        println!("== Nalezený postup ==");
+        for (i, step) in steps.iter().enumerate() {
+            println!("Krok {}: {}", i + 1, step);
+        }
+        
         assert_eq!(final_expr, Expr::Number(2));
     }
 }
