@@ -6,6 +6,6 @@ title = "SMOC (Skardis Math On Crack) Documentation"
 
 [output.html]
 additional-css = ["theme/custom.css"]
-theme = "dark"
+default-theme = "dark"
 git-repository-url = "https://github.com/skardis/SMOC"
 mathjax-support = true
