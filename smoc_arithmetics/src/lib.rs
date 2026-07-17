@@ -129,16 +129,24 @@ pub fn rule_simplify_fraction(expr: &Expr) -> Option<Expr> {
                 bottom_coeff = -bottom_coeff;
             }
 
-            let mut final_top = vec![Expr::Number(top_coeff)];
-            final_top.extend(top_rest);
-            let top_expr = if final_top.len() == 1 { final_top.pop().unwrap() } else { Expr::Node("Multiply".to_string(), final_top) };
+            let top_expr = if top_coeff == 1 && !top_rest.is_empty() {
+                if top_rest.len() == 1 { top_rest.pop().unwrap() } else { Expr::Node("Multiply".to_string(), top_rest) }
+            } else {
+                let mut final_top = vec![Expr::Number(top_coeff)];
+                final_top.extend(top_rest);
+                if final_top.len() == 1 { final_top.pop().unwrap() } else { Expr::Node("Multiply".to_string(), final_top) }
+            };
 
             if bottom_coeff == 1 && bottom_rest.is_empty() {
                 return Some(top_expr);
             } else {
-                let mut final_bottom = vec![Expr::Number(bottom_coeff)];
-                final_bottom.extend(bottom_rest);
-                let bottom_expr = if final_bottom.len() == 1 { final_bottom.pop().unwrap() } else { Expr::Node("Multiply".to_string(), final_bottom) };
+                let bottom_expr = if bottom_coeff == 1 && !bottom_rest.is_empty() {
+                    if bottom_rest.len() == 1 { bottom_rest.pop().unwrap() } else { Expr::Node("Multiply".to_string(), bottom_rest) }
+                } else {
+                    let mut final_bottom = vec![Expr::Number(bottom_coeff)];
+                    final_bottom.extend(bottom_rest);
+                    if final_bottom.len() == 1 { final_bottom.pop().unwrap() } else { Expr::Node("Multiply".to_string(), final_bottom) }
+                };
                 
                 return Some(Expr::Node("Fraction".to_string(), vec![top_expr, bottom_expr]));
             }
@@ -163,6 +171,70 @@ pub fn rule_add_numbers(expr: &Expr) -> Option<Expr> {
             }
             if all_numbers && items.len() > 1 {
                 return Some(Expr::Number(sum));
+            }
+        }
+    }
+    None
+}
+
+// Pravidlo 4: Rozklad na prvočísla (používá smoc_prime)
+pub fn rule_prime_factorize(expr: &Expr) -> Option<Expr> {
+    if let Expr::Number(n) = expr {
+        let abs_n = n.abs();
+        if abs_n > 1 {
+            if let Some(factors) = smoc_prime::prime_factors(abs_n) {
+                if factors.len() > 1 {
+                    let mut items: Vec<Expr> = factors.into_iter().map(Expr::Number).collect();
+                    if *n < 0 {
+                        items.insert(0, Expr::Number(-1));
+                    }
+                    return Some(Expr::Node("Multiply".to_string(), items));
+                }
+            }
+        }
+    }
+    None
+}
+
+// Pravidlo 5: Obyčejné násobení čísel (např. 3 * 5 = 15)
+pub fn rule_multiply_numbers(expr: &Expr) -> Option<Expr> {
+    if let Expr::Node(name, items) = expr {
+        if name == "Multiply" {
+            let mut numbers = Vec::new();
+            let mut others = Vec::new();
+            for item in items {
+                if let Expr::Number(n) = item {
+                    numbers.push(*n);
+                } else {
+                    others.push(item.clone());
+                }
+            }
+            if numbers.len() > 1 {
+                let mut product = 1;
+                for n in numbers {
+                    product *= n;
+                }
+                if others.is_empty() {
+                    return Some(Expr::Number(product));
+                } else {
+                    others.insert(0, Expr::Number(product));
+                    return Some(Expr::Node("Multiply".to_string(), others));
+                }
+            }
+        }
+    }
+    None
+}
+
+// Pravidlo 6: Vyhodnocení číselné mocniny (např. 2^4 = 16)
+pub fn rule_evaluate_power(expr: &Expr) -> Option<Expr> {
+    if let Expr::Node(name, items) = expr {
+        if name == "Power" && items.len() == 2 {
+            if let (Expr::Number(base), Expr::Number(exp)) = (&items[0], &items[1]) {
+                if *exp >= 0 && *exp <= 15 { // Bezpečnostní limit, ať to nepočítá 2^999999
+                    let result = base.pow(*exp as u32);
+                    return Some(Expr::Number(result));
+                }
             }
         }
     }

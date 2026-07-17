@@ -1,10 +1,10 @@
 WHITESPACE = _{ " " | "\t" }
 
-number = @{ ASCII_DIGIT+ }
+number = @{ ASCII_DIGIT+ ~ (("." | ",") ~ ASCII_DIGIT+)* }
 letter = @{ ASCII_ALPHA }
 
 fraction = { "\\frac{" ~ expression ~ "}{" ~ expression ~ "}" }
-group = { "{" ~ expression ~ "}" }
+group = { ("{" ~ expression ~ "}") | ("(" ~ expression ~ ")") }
 
 sqrt_degree = { expression }
 sqrt = { "\\sqrt" ~ ("[" ~ sqrt_degree ~ "]")? ~ "{" ~ expression ~ "}" }

@@ -1,7 +1,7 @@
 use smoc_latex::parse_latex;
 use smoc_core::SmocEngine;
-use smoc_arithmetics::{rule_factorize_add, rule_simplify_fraction, rule_add_numbers};
-use smoc_algebra::{rule_multiply_powers, penalty_root_in_denominator};
+use smoc_arithmetics::{rule_factorize_add, rule_simplify_fraction, rule_add_numbers, rule_multiply_numbers, rule_prime_factorize, rule_evaluate_power};
+use smoc_algebra::{rule_multiply_powers, penalty_root_in_denominator, rule_power_over_multiplication, rule_divide_powers, rule_binomial_expansion};
 
 fn run_test_case(name: &str, latex: &str) {
     println!("\n=== {} ===", name);
@@ -23,7 +23,13 @@ fn run_test_case(name: &str, latex: &str) {
     engine.add_rule("Vytýkání ze sčítání", rule_factorize_add);
     engine.add_rule("Krácení zlomků", rule_simplify_fraction);
     engine.add_rule("Sčítání čísel", rule_add_numbers);
+    engine.add_rule("Násobení čísel", rule_multiply_numbers);
+    engine.add_rule("Vyhodnocení mocniny", rule_evaluate_power);
+    engine.add_rule("Rozklad na prvočísla", rule_prime_factorize);
     engine.add_rule("Sčítání exponentů", rule_multiply_powers);
+    engine.add_rule("Mocnina přes násobení", rule_power_over_multiplication);
+    engine.add_rule("Dělení mocnin", rule_divide_powers);
+    engine.add_rule("Binomická věta", rule_binomial_expansion);
     engine.add_penalty_rule("Odmocnina ve jmenovateli", penalty_root_in_denominator);
 
     // 3. Výpočet
@@ -67,4 +73,44 @@ fn run_all_user_tests() {
     run_test_case("Algebra - 8. Úroveň", "\\frac{a^3 - b^3}{a^2 - b^2}");
     run_test_case("Algebra - 9. Úroveň", "\\frac{2x^2 + 5x - 3}{4x^2 - 1}");
     run_test_case("Algebra - 10. Úroveň", "\\frac{x^3 - x^2 - x + 1}{x^2 - 2x + 1}");
+}
+
+#[test]
+fn test_binomial_expansion() {
+    println!("\n=== Binomická Věta ===");
+    let latex = "(x+y)^3";
+    let math_expr = parse_latex(latex).unwrap();
+    
+    // Očekáváme x^3 + 3x^2y + 3xy^2 + y^3
+    let expected = smoc_core::Expr::Node("Add".to_string(), vec![
+        smoc_core::Expr::Node("Power".to_string(), vec![smoc_core::Expr::Variable("x".to_string()), smoc_core::Expr::Number(3)]),
+        smoc_core::Expr::Node("Multiply".to_string(), vec![smoc_core::Expr::Number(3), smoc_core::Expr::Node("Power".to_string(), vec![smoc_core::Expr::Variable("x".to_string()), smoc_core::Expr::Number(2)]), smoc_core::Expr::Variable("y".to_string())]),
+        smoc_core::Expr::Node("Multiply".to_string(), vec![smoc_core::Expr::Number(3), smoc_core::Expr::Variable("x".to_string()), smoc_core::Expr::Node("Power".to_string(), vec![smoc_core::Expr::Variable("y".to_string()), smoc_core::Expr::Number(2)])]),
+        smoc_core::Expr::Node("Power".to_string(), vec![smoc_core::Expr::Variable("y".to_string()), smoc_core::Expr::Number(3)]),
+    ]);
+    
+    // Použijeme pravidlo přímo, protože Engine by jinak rozvoj zahodil (jelikož je složitější než původní výraz (x+y)^3)
+    let expanded = rule_binomial_expansion(&math_expr).unwrap();
+    assert_eq!(expanded, expected);
+}
+
+#[test]
+fn test_decimal_parser() {
+    println!("\n=== Desetinná čísla ===");
+    let latex = "100.55";
+    let math_expr = parse_latex(latex).unwrap();
+    println!("Výsledek 100.55 = {:?}", math_expr);
+    // 10055 / 100
+    let expected = smoc_core::Expr::Node("Fraction".to_string(), vec![smoc_core::Expr::Number(10055), smoc_core::Expr::Number(100)]);
+    assert_eq!(math_expr, expected);
+
+    let latex2 = "100,000.55";
+    smoc_latex::set_parser_config(smoc_latex::ParserConfig {
+        decimal_mode: smoc_latex::DecimalSeparatorMode::DotIsDecimalCommaIgnores,
+    });
+    let math_expr2 = parse_latex(latex2).unwrap();
+    println!("Výsledek 100,000.55 = {:?}", math_expr2);
+    // 10000055 / 100
+    let expected2 = smoc_core::Expr::Node("Fraction".to_string(), vec![smoc_core::Expr::Number(10000055), smoc_core::Expr::Number(100)]);
+    assert_eq!(math_expr2, expected2);
 }

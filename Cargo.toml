@@ -3,5 +3,5 @@ members = ["smoc_algebra",
     "smoc_arithmetics",
     "smoc_core", 
     "smoc_latex"
-]
+, "smoc_pascaltriangle", "smoc_prime"]
 resolver = "2"
