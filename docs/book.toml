@@ -1,7 +1,6 @@
 [book]
 authors = ["Skardis"]
 language = "en"
-multilingual = false
 src = "src"
 title = "SMOC (Skardis Math On Crack) Documentation"
 
